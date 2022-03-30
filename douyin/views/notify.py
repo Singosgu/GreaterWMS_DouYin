@@ -10,20 +10,15 @@ from rest_framework.exceptions import APIException
 import os, logging
 from django.conf import settings
 
-class OrderAddSerialNumber(viewsets.ModelViewSet):
+class NotifyAPI(viewsets.ModelViewSet):
     """
         create:
-            支持获取店铺数据
-            订单商品的序列号上传
-            订单发货后，如需修改商品序列号或补充上传商品序列号，可调用此接口进行修改或上传
+            消息推送
     """
     pagination_class = MyPageNumberPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter, ]
     ordering_fields = ['id', "create_time", "update_time", ]
     filter_class = Filter
-
-    def __init__(self):
-        self.params = {}
 
     def get_queryset(self):
         if self.request.user:
@@ -32,13 +27,15 @@ class OrderAddSerialNumber(viewsets.ModelViewSet):
             return ListModel.objects.none()
 
     def api_init(self):
-        if os.path.exists(os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + 'douyin.log')) is True:
+        if os.path.exists(
+                os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + 'douyin.log')) is True:
             logging.basicConfig(
                 filename=os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + 'douyin.log'),
                 level=logging.DEBUG, filemode='a',
                 format='%(asctime)s - %(process)s - %(levelname)s: %(message)s')
         else:
-            with open(os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + 'douyin.log'), "w") as f:
+            with open(os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + 'douyin.log'),
+                      "w") as f:
                 f.close()
             logging.basicConfig(
                 filename=os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + 'douyin.log'),
@@ -56,14 +53,17 @@ class OrderAddSerialNumber(viewsets.ModelViewSet):
             sandbox = True
         else:
             sandbox = False
-        if os.path.exists(os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + shop_data.shop_id + '.token')) is False:
-            with open(os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + shop_data.shop_id + '.token'), 'w') as f:
+        if os.path.exists(os.path.join(settings.BASE_DIR,
+                                       'media/' + self.request.auth.openid + '/' + shop_data.shop_id + '.token')) is False:
+            with open(os.path.join(settings.BASE_DIR,
+                                   'media/' + self.request.auth.openid + '/' + shop_data.shop_id + '.token'), 'w') as f:
                 f.close()
         gdoudian = API(
             app_key=shop_data.shop_appid,
             app_secret=shop_data.shop_app_secret,
             shop_id=shop_data.shop_id,
-            token_file=os.path.join(settings.BASE_DIR, 'media/' + self.request.auth.openid + '/' + shop_data.shop_id + '.token'),
+            token_file=os.path.join(settings.BASE_DIR,
+                                    'media/' + self.request.auth.openid + '/' + shop_data.shop_id + '.token'),
             logger=logging.getLogger("douyin"),
             proxy=proxy,
             test_mode=sandbox
@@ -71,7 +71,17 @@ class OrderAddSerialNumber(viewsets.ModelViewSet):
         return gdoudian
 
     def create(self, request, *args, **kwargs):
-        path = '/order/addSerialNumber'
-        params = self.params
-        result = self.api_init().request(path=path, params=params)
-        return Response({'result': result if result else ''})
+        headers = {}
+        headers.update({'app-id': request.META.get('HTTP_APP_ID')})
+        headers.update({'event-sign': request.META.get('HTTP_EVENT_SIGN')})
+        result = self.api_init().callback(headers=headers, body=request.body)
+        if result:
+            tag = result.get('tag')
+            if tag == '0':  # 抖店推送服务验证消息，需立即返回success
+                return Response({'code': 0, 'msg': 'success'})
+            if tag == '100':  # 订单创建消息，更多消息类型查阅官方文档。
+                # TODO: 根据推送的消息参数进行必要的业务处理，5秒内返回success
+                return Response({'code': 0, 'msg': 'success'})
+            return Response({'code': 0, 'msg': 'success'})
+        else:
+            return Response({'code': 40041, 'message': '解析推送数据失败'})

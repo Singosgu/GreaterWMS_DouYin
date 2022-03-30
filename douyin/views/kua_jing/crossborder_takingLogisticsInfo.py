@@ -1,6 +1,5 @@
-
 from rest_framework import viewsets
-from shopid.models import ListModel
+from shopid.models.douyinmodels import ListModel
 from utils.page import MyPageNumberPagination
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
