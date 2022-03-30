@@ -1,0 +1,8 @@
+
+ppython:S1192"YDefine a constant instead of duplicating this literal 'shop_id is not assigned.' 3 times.(ûã„i
+upython:S5886@"]Return a value of type "str" instead of "NoneType" or update function "_hash_hmac" type hint.(ò¤Ÿù
+xpython:S5886N"`Return a value of type "str" instead of "NoneType" or update function "_access_token" type hint.(ò¤Ÿù
+qpython:S3776P"TRefactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed.(¿ ðÅúÿÿÿÿ
+}python:S5886r"eReturn a value of type "str" instead of "NoneType" or update function "_get_refresh_token" type hint.(ò¤Ÿù
+}python:S5886x"eReturn a value of type "str" instead of "NoneType" or update function "_get_refresh_token" type hint.(ò¤Ÿù
+zpython:S5886Í"aReturn a value of type "str" instead of "NoneType" or update function "build_auth_url" type hint.(ò¤Ÿù
